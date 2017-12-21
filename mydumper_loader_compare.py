@@ -8,6 +8,7 @@ import os
 import sys
 import logging
 import argparse
+from warnings import filterwarnings
 
 def Usage():
     parser = argparse.ArgumentParser(description="TiDB loader result check")
@@ -36,6 +37,7 @@ def getlogger():
 def cmp_cnt(db_table):
 
     file_data_cnt = 0
+    global num
 
     for i in data_file:
         if db_table + '.' in i:
@@ -43,23 +45,27 @@ def cmp_cnt(db_table):
             for line in f.readlines():
                 if '(' in line:
                     file_data_cnt += 1
-    db = MySQLdb.connect(host=host,user=username,passwd=password,port=port,db=db_table.split('.')[0])
-    cursor = db.cursor()
-    cursor.execute("select count(*) from " + db_table)
-    data_cnt = cursor.fetchall()[0][0]
-    db.close()
-    if int(file_data_cnt) != int(data_cnt):
-        logger.info(db_table + ' load not complete: mydumper data count is ' + str(file_data_cnt) + '; tidb data count is ' + str(data_cnt) + '.')
+    try:
+        db = MySQLdb.connect(host=host,user=username,passwd=password,port=port,db=db_table.split('.')[0])
+        cursor = db.cursor()
+        cursor.execute("select count(*) from " + db_table)
+        data_cnt = cursor.fetchall()[0][0]
+        db.close()
+    except MySQLdb.Error, w:
+        logger.info(db_table + ' load not complete: ' + db_table + ' is not exist')
+        num += 1
     else:
-        logger.info(db_table + ' load complete: mydumper data count is ' + str(file_data_cnt) + '; tidb data count is ' + str(data_cnt) + '.')
+        if int(file_data_cnt) != int(data_cnt):
+            logger.info(db_table + ' load not complete: mydumper data count is ' + str(file_data_cnt) + '; tidb data count is ' + str(data_cnt) + '.')
+        else:
+            logger.info(db_table + ' load complete: mydumper data count is ' + str(file_data_cnt) + '; tidb data count is ' + str(data_cnt) + '.')
 
-    global num
-    num += 1
-    if num > table_num:
-        num = table_num
-    percent = int((num + 1) / table_num * 100)
-    sys.stdout.write('[' + '#'*percent + ' '*(100 - percent) + '] ' + str(percent) + '%\r')
-    sys.stdout.flush()
+        num += 1
+        if num > table_num:
+            num = table_num
+        percent = int((num + 1) / table_num * 100)
+        sys.stdout.write('[' + '#'*percent + ' '*(100 - percent) + '] ' + str(percent) + '%\r')
+        sys.stdout.flush()
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
@@ -75,6 +81,7 @@ if __name__ == '__main__':
     log = args.log
     Threads = int(args.thread)
 
+    filterwarnings('error', category = MySQLdb.Warning)
     logger = getlogger()
     file_list = os.listdir(Dir)
     data_file = [i for i in file_list if "schema" not in i and "metadata" not in i]
