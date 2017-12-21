@@ -55,7 +55,9 @@ def cmp_cnt(db_table):
 
     global num
     num += 1
-    percent = int((num + 1) / table_num) * 100
+    if num > table_num:
+        num = table_num
+    percent = int((num + 1) / table_num * 100)
     sys.stdout.write('[' + '#'*percent + ' '*(100 - percent) + '] ' + str(percent) + '%\r')
     sys.stdout.flush()
 
