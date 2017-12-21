@@ -52,7 +52,7 @@ def cmp_cnt(db_table):
         data_cnt = cursor.fetchall()[0][0]
         db.close()
     except MySQLdb.Error, w:
-        logger.info(db_table + ' load not complete: ' + db_table + ' is not exist')
+        logger.info(db_table + ' load not complete: ' + db_table + ' is not exist.')
         num += 1
     else:
         if int(file_data_cnt) != int(data_cnt):
