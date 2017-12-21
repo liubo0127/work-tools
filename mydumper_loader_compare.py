@@ -1,6 +1,7 @@
 #!/bin/env python
 #coding=utf-8
 
+from __future__ import division
 import threadpool
 import MySQLdb
 import os
@@ -52,6 +53,12 @@ def cmp_cnt(db_table):
     else:
         logger.info(db_table + ' load complete: mydumper data count is ' + str(file_data_cnt) + '; tidb data count is ' + str(data_cnt) + '.')
 
+    global num
+    num += 1
+    percent = int((num + 1) / table_num * 100)
+    sys.stdout.write('[' + '#'*percent + ' '*(100 - percent) + '] ' + str(percent) + '%\r')
+    sys.stdout.flush()
+
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         print "usage: " + __file__ + " -h"
@@ -75,8 +82,10 @@ if __name__ == '__main__':
         table = i.split('.')[1]
         if database + '.' + table not in table_list:
             table_list.append(database + '.' + table)
-
+    table_num = len(table_list)
+    num = 0
     pool = threadpool.ThreadPool(Threads)
     requests = threadpool.makeRequests(cmp_cnt,table_list)
     [pool.putRequest(req) for req in requests]
     pool.wait()
+    print ''
