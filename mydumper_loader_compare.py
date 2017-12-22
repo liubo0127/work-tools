@@ -56,6 +56,9 @@ def cmp_cnt(db_table):
         num += 1
         if num > table_num:
             num = table_num
+        percent = int((num + 1) / table_num * 100)
+        sys.stdout.write('[' + '#' * percent + ' ' * (100 - percent) + '] ' + str(percent) + '%\r')
+        sys.stdout.flush()
     else:
         if int(file_data_cnt) != int(data_cnt):
             logger.info(db_table + ' load not complete: mydumper data count is ' + str(file_data_cnt) + '; tidb data count is ' + str(data_cnt) + '.')
