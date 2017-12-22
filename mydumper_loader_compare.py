@@ -54,6 +54,8 @@ def cmp_cnt(db_table):
     except MySQLdb.Error, w:
         logger.info(db_table + ' load not complete: ' + db_table + ' is not exist.')
         num += 1
+        if num > table_num:
+            num = table_num
     else:
         if int(file_data_cnt) != int(data_cnt):
             logger.info(db_table + ' load not complete: mydumper data count is ' + str(file_data_cnt) + '; tidb data count is ' + str(data_cnt) + '.')
